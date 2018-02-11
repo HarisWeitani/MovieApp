@@ -5,4 +5,5 @@ package com.example.sirwarfox.movieapp;
  */
 
 public class SettingsActivity {
+
 }
