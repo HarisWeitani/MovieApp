@@ -118,7 +118,7 @@ public class DetailActivity extends AppCompatActivity{
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
 
-//        loadJSON();
+        loadJSON();
 
     }
 
