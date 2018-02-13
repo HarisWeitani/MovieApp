@@ -2,6 +2,7 @@ package com.example.sirwarfox.movieapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -123,29 +124,35 @@ public class DetailActivity extends AppCompatActivity{
     }
 
     private void loadJSON(){
-        int movie_id = getIntent().getExtras().getInt("id");
+        final int movie_id = getIntent().getExtras().getInt("id");
         try{
             if(BuildConfig.THE_MOVIE_DB_API_TOKEN.isEmpty()){
                 Toast.makeText(getApplicationContext(), "API NOT FOUND", Toast.LENGTH_SHORT).show();
                 return;
             }
-            Client client = new Client();
+            Client Client = new Client();
             Service apiService = Client.getClient().create(Service.class);
             Call<TrailerResponse> call = apiService.getMovieTrailer(movie_id, BuildConfig.THE_MOVIE_DB_API_TOKEN);
             call.enqueue(new Callback<TrailerResponse>() {
                 @Override
                 public void onResponse(Call<TrailerResponse> call, Response<TrailerResponse> response) {
-                    List<Trailer> trailers = response.body().getResults();
-                    recyclerView.setAdapter(new TrailerAdapter(getApplicationContext(), trailers));
-                    recyclerView.smoothScrollToPosition(0);
+                    try {
+                        List<Trailer> trailer = response.body().getResults();
+                        recyclerView.setAdapter(new TrailerAdapter(getApplicationContext(), trailer));
+                        recyclerView.smoothScrollToPosition(0);
+                    }catch (NullPointerException e){
+                        Toast.makeText(DetailActivity.this, "Error Getting Movie ID", Toast.LENGTH_SHORT).show();
+                    }
+
                 }
 
                 @Override
                 public void onFailure(Call<TrailerResponse> call, Throwable t) {
                     Log.d("Error", t.getMessage());
-                    Toast.makeText(DetailActivity.this, "Error Fetching Trailer", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DetailActivity.this, "Error Fetching Data", Toast.LENGTH_SHORT).show();
                 }
             });
+
         }catch (Exception e){
             Log.d("ERROR", e.getMessage());
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
