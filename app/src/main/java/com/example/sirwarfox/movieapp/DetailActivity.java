@@ -6,12 +6,27 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.sirwarfox.movieapp.adapter.TrailerAdapter;
+import com.example.sirwarfox.movieapp.api.Client;
+import com.example.sirwarfox.movieapp.api.Service;
+import com.example.sirwarfox.movieapp.model.Trailer;
+import com.example.sirwarfox.movieapp.model.TrailerResponse;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by Sir.WarFox on 10/02/2018.
@@ -20,6 +35,9 @@ import com.bumptech.glide.Glide;
 public class DetailActivity extends AppCompatActivity{
     TextView nameOfMovie, plotSynopsis, userRRating, releaseDate;
     ImageView imageView;
+    private RecyclerView recyclerView;
+    private TrailerAdapter adapter;
+    private List<Trailer> trailerList;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,6 +77,8 @@ public class DetailActivity extends AppCompatActivity{
         }else{
             Toast.makeText(this, "No API Data", Toast.LENGTH_SHORT).show();
         }
+
+        initViews();
     }
 
     private void initCollapsingToolbar(){
@@ -86,5 +106,49 @@ public class DetailActivity extends AppCompatActivity{
                 }
             }
         });
+    }
+
+    private void initViews(){
+        trailerList = new ArrayList<>();
+        adapter = new TrailerAdapter(this, trailerList);
+
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view1);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+
+//        loadJSON();
+
+    }
+
+    private void loadJSON(){
+        int movie_id = getIntent().getExtras().getInt("id");
+        try{
+            if(BuildConfig.THE_MOVIE_DB_API_TOKEN.isEmpty()){
+                Toast.makeText(getApplicationContext(), "API NOT FOUND", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Client client = new Client();
+            Service apiService = Client.getClient().create(Service.class);
+            Call<TrailerResponse> call = apiService.getMovieTrailer(movie_id, BuildConfig.THE_MOVIE_DB_API_TOKEN);
+            call.enqueue(new Callback<TrailerResponse>() {
+                @Override
+                public void onResponse(Call<TrailerResponse> call, Response<TrailerResponse> response) {
+                    List<Trailer> trailers = response.body().getResults();
+                    recyclerView.setAdapter(new TrailerAdapter(getApplicationContext(), trailers));
+                    recyclerView.smoothScrollToPosition(0);
+                }
+
+                @Override
+                public void onFailure(Call<TrailerResponse> call, Throwable t) {
+                    Log.d("Error", t.getMessage());
+                    Toast.makeText(DetailActivity.this, "Error Fetching Trailer", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }catch (Exception e){
+            Log.d("ERROR", e.getMessage());
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
