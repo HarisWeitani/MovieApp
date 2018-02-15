@@ -60,6 +60,9 @@ public class Movie {
         this.overview = overview;
         this.release_date = release_date;
     }
+    public Movie(){
+
+    }
 
     String baseImageURL = "https://image.tmdb.org/t/p/w500";
 

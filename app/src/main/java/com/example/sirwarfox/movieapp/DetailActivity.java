@@ -22,6 +22,8 @@ import com.bumptech.glide.Glide;
 import com.example.sirwarfox.movieapp.adapter.TrailerAdapter;
 import com.example.sirwarfox.movieapp.api.Client;
 import com.example.sirwarfox.movieapp.api.Service;
+import com.example.sirwarfox.movieapp.data.FavoriteDbHelper;
+import com.example.sirwarfox.movieapp.model.Movie;
 import com.example.sirwarfox.movieapp.model.Trailer;
 import com.example.sirwarfox.movieapp.model.TrailerResponse;
 import com.github.ivbaranov.mfb.MaterialFavoriteButton;
@@ -43,6 +45,9 @@ public class DetailActivity extends AppCompatActivity{
     private RecyclerView recyclerView;
     private TrailerAdapter adapter;
     private List<Trailer> trailerList;
+    private FavoriteDbHelper favoriteDbHelper;
+    private Movie favorite;
+    private final AppCompatActivity activity = DetailActivity.this;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,6 +75,8 @@ public class DetailActivity extends AppCompatActivity{
             String rating = getIntent().getExtras().getString("vote_average");
             String dateOfRelease = getIntent().getExtras().getString("release_date");
 
+
+
             Glide.with(this)
                     .load(thumbnail)
                     .placeholder(R.drawable.load)
@@ -95,9 +102,13 @@ public class DetailActivity extends AppCompatActivity{
                             "com.delaroystudios.movieapp.DetailActivity", MODE_PRIVATE).edit();
                     editor.putBoolean("Favorite Added", true);
                     editor.commit();
-                    //saveFavorite();
+                    saveFavorite();
                     Snackbar.make(buttonView, "Added to Favorite", Snackbar.LENGTH_SHORT).show();
                 }else{
+                    int movie_id = getIntent().getExtras().getInt("id");
+                    favoriteDbHelper = new FavoriteDbHelper(DetailActivity.this);
+                    favoriteDbHelper.deleteFavorite(movie_id);
+
                     SharedPreferences.Editor editor = getSharedPreferences(
                             "com.delaroystudios.movieapp.DetailActivity", MODE_PRIVATE).edit();
                     editor.putBoolean("Favorite Removed", true);
@@ -186,4 +197,22 @@ public class DetailActivity extends AppCompatActivity{
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
+
+    public void saveFavorite(){
+        favoriteDbHelper = new FavoriteDbHelper(activity);
+        favorite = new Movie();
+        int movie_id = getIntent().getExtras().getInt("id");
+        String rate = getIntent().getExtras().getString("vote_average");
+        String poster = getIntent().getExtras().getString("poster_path");
+
+        favorite.setId(movie_id);
+        favorite.setOriginal_title(nameOfMovie.getText().toString().trim());
+        favorite.setPosterPath(poster);
+        favorite.setVoteAvarage(Double.parseDouble(rate));
+        favorite.setOverview(plotSynopsis.getText().toString().trim());
+
+        favoriteDbHelper.addFavorite(favorite);
+
+    }
+
 }
