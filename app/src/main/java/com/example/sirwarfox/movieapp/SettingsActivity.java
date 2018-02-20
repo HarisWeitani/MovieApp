@@ -1,5 +1,6 @@
 package com.example.sirwarfox.movieapp;
 
+import android.app.Fragment;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
@@ -24,4 +25,5 @@ public class SettingsActivity extends PreferenceActivity {
             addPreferencesFromResource(R.xml.preferences);
         }
     }
+
 }
